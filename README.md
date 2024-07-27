@@ -25,7 +25,7 @@ Order	Bestellung
 DeliveryPackage	Eine Sendung mit einer oder mehreren Waren, die der Kunde gekauft hat, versendet aus einem Warenhaus
 DeliveryPackagePart	Ein Teil einer Sendung, der ein zu verkaufende Ware und die Menge enthält
 E1: Implement parts of the REST API from M3
-Bloom-Level Level 4 (Analyse) in Bloom's Taxonomy
+BloomLevel Level 4 (Analyse) in Bloom's Taxonomy
 
 In this exercise, you will implement the following 6 of the 20 REST endpoints introduced in M3. If there are specific requirements with respect to request or response body, they are listed below.
 
