@@ -1,0 +1,13 @@
+{
+  "tableType": "ROWS_AND_COLUMNS",
+  "explanationDimensions": ["Question"],
+  "validRowValues": [],
+  "validColumnValues": [
+    "Question",
+    "Answer"
+  ],
+  "validCellValues": [],
+  "hashedColumns": [false, false],
+  "showRowHints": true,
+  "showColumnHints": true
+}

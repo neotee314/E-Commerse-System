@@ -1,0 +1,23 @@
+spring:
+    application:
+        name: st2-m3-ecom24
+
+    jpa:
+        hibernate:
+            ddl-auto: create-drop
+            naming:
+                implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
+        properties:
+            hibernate:
+                jdbc:
+                    lob:
+                        non_contextual_creation: true
+
+
+
+server:
+    port: 8080
+    compression:
+        enabled: true
+        mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
