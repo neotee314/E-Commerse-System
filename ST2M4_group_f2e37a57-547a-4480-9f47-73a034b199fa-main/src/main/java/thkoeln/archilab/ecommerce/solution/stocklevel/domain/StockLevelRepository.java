@@ -9,5 +9,4 @@ import java.util.UUID;
 @Repository
 public interface StockLevelRepository extends CrudRepository<StockLevel, UUID> {
 
-    List<StockLevel> findStockByThing(Thing thing);
 }

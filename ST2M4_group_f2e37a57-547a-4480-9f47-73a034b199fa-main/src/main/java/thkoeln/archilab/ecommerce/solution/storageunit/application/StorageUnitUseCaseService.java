@@ -49,9 +49,8 @@ public class StorageUnitUseCaseService implements StorageUnitUseCases {
             throw new ShopException("the added quantity cannot be negative");
         StorageUnit storageUnit = storageUnitService.findById(storageUnitId);
         StockLevel stockLevel = new StockLevel(thing, addedQuantity);
-        storageUnit.addToStock(stockLevel);
+        storageUnitService.addToStock(storageUnit, stockLevel);
         stockLevelService.save(stockLevel);
-        storageUnitRepository.save(storageUnit);
     }
 
     @Override
@@ -63,18 +62,19 @@ public class StorageUnitUseCaseService implements StorageUnitUseCases {
         StorageUnit storageUnit = storageUnitService.findById(storageUnitId);
         if (storageUnit == null) throw new ShopException("invalid storage");
 
-        int currentInventory = storageUnit.getAvailableStock(thing);
+        int currentInventory = storageUnitService.getAvailableStock(storageUnit, thing);
         int currentlyReserved = reservationServiceInterface.getTotalReservedInAllBaskets(thing);
         if (removedQuantity > currentInventory + currentlyReserved)
             throw new ShopException("The removed quantity is greater than the available quantity");
 
         int stockAfter = currentInventory - removedQuantity;
         if (stockAfter >= 0) {
-            storageUnit.removeFromStock(stockLevel);
+            storageUnitService.removeFromStock(storageUnit, stockLevel);
             storageUnitRepository.save(storageUnit);
             return;
         }
-        if (currentInventory > 0) storageUnit.removeFromStock(new StockLevel(thing, currentInventory));
+        if (currentInventory > 0)
+            storageUnitService.removeFromStock(storageUnit, new StockLevel(thing, currentInventory));
         storageUnitRepository.save(storageUnit);
         reservationServiceInterface.removeFromReservedQuantity(thing, removedQuantity - currentInventory);
 
@@ -95,13 +95,13 @@ public class StorageUnitUseCaseService implements StorageUnitUseCases {
             reservationServiceInterface.removeFromReservedQuantity(thing, lostQuantity);
             StorageUnit storageUnit = storageUnitService.findById(storageUnitId);
             StockLevel stockLevel = new StockLevel(thing, 0);
-            storageUnit.changeStockTo(stockLevel);
+            storageUnitService.changeStockTo(storageUnit, stockLevel);
             storageUnitRepository.save(storageUnit);
             return;
         }
         StorageUnit storageUnit = storageUnitService.findById(storageUnitId);
         StockLevel stockLevel = new StockLevel(thing, newTotalQuantity);
-        storageUnit.changeStockTo(stockLevel);
+        storageUnitService.changeStockTo(storageUnit, stockLevel);
         storageUnitRepository.save(storageUnit);
 
     }
@@ -112,7 +112,7 @@ public class StorageUnitUseCaseService implements StorageUnitUseCases {
         Thing thing = thingService.findById(thingId);
         if (thing == null) throw new ShopException("invalid data");
         StorageUnit storageUnit = storageUnitService.findById(storageUnitId);
-        return storageUnit.getAvailableStock(thing);
+        return storageUnitService.getAvailableStock(storageUnit, thing);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class StorageUnitUseCaseService implements StorageUnitUseCases {
         List<StorageUnit> storageUnitList = storageUnitService.findAll();
         int availableStock = 0;
         for (StorageUnit storageUnit : storageUnitList) {
-            availableStock += storageUnit.getAvailableStock(thing);
+            availableStock += storageUnitService.getAvailableStock(storageUnit, thing);
         }
         return availableStock;
     }

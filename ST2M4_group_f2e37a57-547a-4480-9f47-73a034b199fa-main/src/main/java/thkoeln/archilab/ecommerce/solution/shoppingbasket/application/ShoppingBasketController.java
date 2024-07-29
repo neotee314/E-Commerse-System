@@ -12,6 +12,7 @@ import thkoeln.archilab.ecommerce.solution.order.application.OrderPartDTO;
 import thkoeln.archilab.ecommerce.solution.order.application.OrderService;
 import thkoeln.archilab.ecommerce.solution.order.domain.Order;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
+import thkoeln.archilab.ecommerce.solution.thing.application.ReservationServiceInterface;
 import thkoeln.archilab.ecommerce.solution.thing.application.ThingService;
 import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
 import thkoeln.archilab.ecommerce.usecases.ThingCatalogUseCases;
@@ -26,6 +27,7 @@ public class ShoppingBasketController {
     private final ShoppingBasketService shoppingBasketService;
     private final ThingService thingService;
     private final OrderService orderService;
+    private final ReservationServiceInterface reservationServiceInterface;
 
     @GetMapping("/shoppingBaskets")
     public ResponseEntity<ShoppingBasketDTO> getShoppingBasketForClient(@RequestParam(value = "clientId", required = false) UUID clientId) {
@@ -61,8 +63,6 @@ public class ShoppingBasketController {
 
     }
 
-    //       (10) Delete a certain thing from the shopping basket
-
     @DeleteMapping("/shoppingBaskets/{shoppingBasket-id}/parts/{thing-id}")
     public ResponseEntity<?> deleteShoppingBasketPart(@PathVariable("shoppingBasket-id") UUID shoppingBasketId,
                                                       @PathVariable("thing-id") UUID thingId) {
@@ -74,7 +74,7 @@ public class ShoppingBasketController {
             Email clientEmail = shoppingBasket.getClient().getEmail();
 
             Thing thing = thingService.findById(thingId);
-            int currentlyReservedGood = shoppingBasket.getReservedQuantity(thing);
+            int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(shoppingBasket, thing);
             shoppingBasketUseCaseService.removeThingFromShoppingBasket(clientEmail, thingId, currentlyReservedGood);
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (ShopException e) {
@@ -86,10 +86,9 @@ public class ShoppingBasketController {
 
     }
 
-    //     (11) Check out the shopping basket (and have the shop create an order as a consequence)
 
     @PostMapping("/shoppingBaskets/{shoppingBasket-id}/checkout")
-    public ResponseEntity<IdDto> checkOutAShoppingBasket(@PathVariable("shoppingBasket-id") UUID shoppingBasketId) {
+    public ResponseEntity<IdDto> checkout(@PathVariable("shoppingBasket-id") UUID shoppingBasketId) {
         try {
             ShoppingBasket shoppingBasket = shoppingBasketService.findById(shoppingBasketId);
             UUID orderId = shoppingBasketUseCaseService.checkout(shoppingBasket.getClient().getEmail());

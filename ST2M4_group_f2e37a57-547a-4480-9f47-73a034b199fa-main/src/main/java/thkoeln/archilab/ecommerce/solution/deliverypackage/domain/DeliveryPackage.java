@@ -15,21 +15,7 @@ public class DeliveryPackage {
     @Id
     private UUID deliveryId = UUID.randomUUID();
 
- //   @ElementCollection
- //   private Map<UUID, Integer> content = new HashMap<>();
-
     @OneToMany(cascade = CascadeType.ALL)
     private List<DeliveryPackagePart> parts = new ArrayList<>();
 
-    //public DeliveryPackage(Map<UUID, Integer> deliveryContent) {
-  //      this.content = deliveryContent;
-//    }
-
-    public void addPart(DeliveryPackagePart part) {
-        parts.add(part);
-    }
-
-    public void remove(DeliveryPackagePart part) {
-        parts.removeIf(deliveryPackagePart -> deliveryPackagePart.getThing().equals(part.getThing()));
-    }
 }

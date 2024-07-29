@@ -44,9 +44,6 @@ public class Client {
 
     }
 
-    public void addToOrderHistory(Orderable order) {
-        orderHistory.add(order);
-    }
 
     @Override
     public boolean equals(Object o) {

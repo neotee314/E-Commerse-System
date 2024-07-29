@@ -208,7 +208,6 @@ private OrderService orderService;
 
         Thing thing11 = thingService.findById( (UUID) THING_DATA[11][0]);
         Thing thing14 = thingService.findById( (UUID) THING_DATA[14][0]);
-        int stock = storageUnit.getAvailableStockForItems(Arrays.asList(thing8,thing11,thing14));
         shoppingBasketRESTHelper.addThingToShoppingBasket(
                 shoppingBasketId3, (UUID) THING_DATA[8][0], 3);
         shoppingBasketRESTHelper.addThingToShoppingBasket(
@@ -219,7 +218,6 @@ private OrderService orderService;
         // but only 7 has enough capacity
         UUID orderId = shoppingBasketRESTHelper.checkout(shoppingBasketId3);
         Order order = orderService.findById(orderId);
-        int qq = order.getQuantity();
         // when
         Map<UUID, Map<UUID, Integer>> storageUnitMap = Map.of(
                 STORAGE_UNIT_ID[7], map8_11_14_quantity_3_3_4

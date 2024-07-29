@@ -17,11 +17,8 @@ import java.util.UUID;
 public class ThingCatalogService implements ThingCatalogUseCases {
 
     private final ThingService thingService;
-
     private final ReservationServiceInterface reservationServiceInterface;
-
     private final OrderedThingServiceInterface orderedThingServiceInterface;
-
     private final InventoryServiceInterface inventoryServiceInterface;
 
 
@@ -31,7 +28,7 @@ public class ThingCatalogService implements ThingCatalogUseCases {
         if (thingId == null)
             throw new ShopException("thingId cannot be null");
         Thing thing = thingService.findById(thingId);
-        if (thing != null) throw new ShopException("Good with id " + thingId + " already exists");
+        if (thing != null) throw new ShopException("thing with id " + thingId + " already exists");
 
         if (name == null || name.trim().equals("")) {
             throw new ShopException("Name must not be null or empty");
@@ -82,7 +79,7 @@ public class ThingCatalogService implements ThingCatalogUseCases {
 
     @Override
     public void deleteThingCatalog() {
-        reservationServiceInterface.deleteOrderParts();
+        orderedThingServiceInterface.deleteOrderParts();
         reservationServiceInterface.deleteAllShoppingBasketParts();
         thingService.deleteAllThing();
     }

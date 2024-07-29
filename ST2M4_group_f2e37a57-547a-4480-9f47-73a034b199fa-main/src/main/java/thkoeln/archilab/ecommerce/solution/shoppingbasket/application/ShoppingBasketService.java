@@ -3,17 +3,16 @@ package thkoeln.archilab.ecommerce.solution.shoppingbasket.application;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import thkoeln.archilab.ecommerce.ShopException;
+import thkoeln.archilab.ecommerce.domainprimitives.Money;
 import thkoeln.archilab.ecommerce.solution.client.application.ClientService;
 import thkoeln.archilab.ecommerce.solution.client.domain.Client;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketPart;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketRepository;
 import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
+import thkoeln.archilab.ecommerce.usecases.domainprimitivetypes.MoneyType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -35,16 +34,10 @@ public class ShoppingBasketService {
         if (client == null || part == null) throw new ShopException("invalid data");
         ShoppingBasket shoppingBasket = shoppingBasketRepository.findByClient(client);
         if (shoppingBasket == null) shoppingBasket = create(client);
-        shoppingBasket.addPart(part);
+        addPart(shoppingBasket, part);
         shoppingBasketRepository.save(shoppingBasket);
     }
 
-    public void removeThingFromBasket(ShoppingBasket basket, Thing thing, int quantity) {
-        if (basket == null || thing == null || quantity < 0)
-            throw new ShopException("invalid data");
-        basket.removeThingFromBasket(thing, quantity);
-        shoppingBasketRepository.save(basket);
-    }
 
     public ShoppingBasket findBasketByClient(Client client) {
         if (client == null) throw new ShopException("invalid data");
@@ -55,12 +48,12 @@ public class ShoppingBasketService {
     public boolean contains(Thing thing) {
         if (thing == null) throw new ShopException("thing cannot be null");
         List<ShoppingBasket> shoppingBaskets = shoppingBasketRepository.findAll();
-        return shoppingBaskets.stream().anyMatch(basket -> basket.contains(thing));
+        return shoppingBaskets.stream().anyMatch(basket -> contains(basket, thing));
     }
 
     public void emptyBasket(ShoppingBasket shoppingBasket) {
         if (shoppingBasket == null) throw new ShopException("invalid data");
-        shoppingBasket.emptyBasket();
+        shoppingBasket.getParts().clear();
         shoppingBasketRepository.save(shoppingBasket);
     }
 
@@ -77,7 +70,7 @@ public class ShoppingBasketService {
         List<ShoppingBasket> shoppingBaskets = getAllBasketContaining(thing);
         List<ShoppingBasketPart> result = new ArrayList<>();
         for (ShoppingBasket basket : shoppingBaskets) {
-            result.addAll(basket.getOrderPartsContaining(thing));
+            result.addAll(getPartsContainingThing(basket, thing));
         }
         return result;
     }
@@ -86,12 +79,13 @@ public class ShoppingBasketService {
         List<ShoppingBasket> shoppingBaskets = findAll();
         List<ShoppingBasket> result = new ArrayList<>();
         for (ShoppingBasket basket : shoppingBaskets) {
-            if (basket.contains(thing)) {
+            if (contains(basket, thing)) {
                 result.add(basket);
             }
         }
         return result;
     }
+
     public ShoppingBasket findOrCreateBasketByClient(Client client) {
         ShoppingBasket shoppingBasket = findBasketByClient(client);
         if (shoppingBasket == null) {
@@ -122,7 +116,7 @@ public class ShoppingBasketService {
         }
 
         shoppingBasketDTO.setShoppingBasketParts(partDTOS);
-        String totalSalesPriceString = String.format("%.2f €", shoppingBasket.getCartValue().getAmount());
+        String totalSalesPriceString = String.format("%.2f €", getCartValue(shoppingBasket).getAmount());
         shoppingBasketDTO.setTotalSalesPrice(totalSalesPriceString);
 
         return shoppingBasketDTO;
@@ -134,7 +128,82 @@ public class ShoppingBasketService {
         return shoppingBasketOptional.get();
     }
 
+    public boolean contains(ShoppingBasket shoppingBasket, Thing thing) {
+        for (ShoppingBasketPart part : shoppingBasket.getParts()) {
+            if (part.contains(thing)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+
+
+    public void addPart(ShoppingBasket shoppingBasket, ShoppingBasketPart newPart) {
+        for (ShoppingBasketPart part : shoppingBasket.getParts()) {
+            if (part.getThingId().equals(newPart.getThingId())) {
+                part.addQuantity(newPart.getQuantity());
+                return;
+            }
+        }
+        ShoppingBasketPart o = new ShoppingBasketPart(newPart.getThing(), newPart.getQuantity());
+        shoppingBasket.getParts().add(o);
+    }
+
+
+    public boolean removeThingFromBasket(ShoppingBasket shoppingBasket, Thing thing, int quantity) {
+        for (ShoppingBasketPart part : shoppingBasket.getParts()) {
+            if (part.contains(thing) && part.getQuantity() >= quantity) {
+                part.removeQuantity(quantity);
+                shoppingBasketRepository.save(shoppingBasket);
+                if (part.getQuantity() == 0) {
+                    shoppingBasket.getParts().remove(part);
+                    shoppingBasketRepository.save(shoppingBasket);
+                }
+                return true;
+            }
+        }
+        shoppingBasketRepository.save(shoppingBasket);
+        return false;
+    }
+
+
+    public MoneyType getCartValue(ShoppingBasket shoppingBasket) {
+        float totalValue = 0;
+        for (ShoppingBasketPart part : shoppingBasket.getParts()) {
+            totalValue += part.getSellingPrice().multiplyBy(part.getQuantity()).getAmount();
+        }
+        return Money.of(totalValue, "EUR");
+    }
+
+    public boolean isEmpty(ShoppingBasket shoppingBasket) {
+        for (ShoppingBasketPart part : shoppingBasket.getParts()) {
+            if (part.getQuantity() != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    public Map<UUID, Integer> getAsMap(ShoppingBasket shoppingBasket) {
+        Map<UUID, Integer> basketAsMap = new HashMap<>();
+        for (ShoppingBasketPart part : shoppingBasket.getParts()) {
+            basketAsMap.put(part.getThingId(), part.getQuantity());
+        }
+        return basketAsMap;
+    }
+
+
+    public List<ShoppingBasketPart> getPartsContainingThing(ShoppingBasket shoppingBasket, Thing thing) {
+        List<ShoppingBasketPart> result = new ArrayList<>();
+        for (ShoppingBasketPart part : shoppingBasket.getParts()) {
+            if (part.contains(thing)) {
+                result.add(part);
+            }
+        }
+        return result;
+    }
 
 
 }

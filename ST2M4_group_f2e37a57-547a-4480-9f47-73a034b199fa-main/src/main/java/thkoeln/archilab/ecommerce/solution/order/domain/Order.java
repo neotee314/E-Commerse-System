@@ -26,39 +26,4 @@ public class Order extends Orderable {
         orderDate = LocalDate.now();
     }
 
-    public void addOrderPart(OrderPart orderPart) {
-        for (OrderPart o : orderParts) {
-            if (o == orderPart) {
-                o.addQuantity(orderPart.getOrderQuantity());
-                return;
-            }
-        }
-        orderParts.add(orderPart);
-    }
-
-
-    public int getQuantity() {
-        int quantity = 0;
-        for (OrderPart orderPart : orderParts) {
-            quantity += orderPart.getOrderQuantity();
-        }
-        return quantity;
-    }
-
-    public boolean contains(Thing thing) {
-        for (OrderPart item : orderParts) {
-            if (item.getThingId().equals(thing.getId())) return true;
-        }
-        return false;
-    }
-
-    public OrderPart getOrderPartContain(Thing thing) {
-        for (OrderPart orderPart : orderParts) {
-            if (orderPart.getThing().equals(thing)) return orderPart;
-        }
-        return null;
-
-    }
-
-
 }

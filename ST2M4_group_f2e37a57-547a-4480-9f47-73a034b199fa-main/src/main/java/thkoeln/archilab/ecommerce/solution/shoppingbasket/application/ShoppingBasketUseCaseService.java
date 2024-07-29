@@ -13,6 +13,7 @@ import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketPart;
 import thkoeln.archilab.ecommerce.solution.stocklevel.application.StockLevelService;
 import thkoeln.archilab.ecommerce.solution.storageunit.application.StorageUnitUseCaseService;
+import thkoeln.archilab.ecommerce.solution.thing.application.ReservationServiceInterface;
 import thkoeln.archilab.ecommerce.solution.thing.application.ThingService;
 import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
 import thkoeln.archilab.ecommerce.usecases.ShoppingBasketUseCases;
@@ -36,6 +37,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
     private final StorageUnitUseCaseService storageUnitUseCaseService;
     private final StockLevelService stockLevelService;
     private final OrderPartService orderPartService;
+    private final ReservationServiceInterface reservationServiceInterface;
 
     @Override
     public void addThingToShoppingBasket(EmailType clientEmail, UUID thingId, int quantity) {
@@ -66,9 +68,9 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (quantity < 0) throw new ShopException("quantity can not be negative");
 
         ShoppingBasket basket = shoppingBasketService.findBasketByClient(client);
-        if (!basket.contains(thing))
+        if (!shoppingBasketService.contains(basket, thing))
             throw new ShopException("Thing is not in the cart of client");
-        int currentlyReservedGood = basket.getReservedQuantity(thing);
+        int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(basket,thing);
         if (quantity > currentlyReservedGood)
             throw new ShopException("Thing is not in the cart in the requested quantity");
         shoppingBasketService.removeThingFromBasket(basket, thing, quantity);
@@ -80,7 +82,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         Client client = clientService.findByEmail(clientEmail);
         if (client == null) throw new ShopException("client does not exist");
         ShoppingBasket basket = shoppingBasketService.findBasketByClient(client);
-        return basket.getAsMap();
+        return shoppingBasketService.getAsMap(basket);
     }
 
     @Override
@@ -89,7 +91,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         Client client = clientService.findByEmail(clientEmail);
         if (client == null) throw new ShopException("client does not exist");
         ShoppingBasket basket = shoppingBasketService.findBasketByClient(client);
-        return basket.getCartValue();
+        return shoppingBasketService.getCartValue(basket);
     }
 
     @Override
@@ -98,7 +100,8 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         Thing thing = thingService.findById(thingId);
         if (thing == null) throw new ShopException("Thing does not exist");
         List<ShoppingBasket> shoppingBasketList = shoppingBasketService.findAll();
-        return shoppingBasketList.stream().mapToInt(basket -> basket.getReservedQuantity(thing)).sum();
+        return shoppingBasketList.stream().mapToInt(basket ->
+                reservationServiceInterface.getReservedQuantity(basket,thing)).sum();
     }
 
 
@@ -109,7 +112,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (client == null) throw new ShopException("client does not exist");
         ShoppingBasket shoppingBasket = shoppingBasketService.findBasketByClient(client);
         if (shoppingBasket == null) return true;
-        return shoppingBasket.isEmpty();
+        return shoppingBasketService.isEmpty(shoppingBasket);
     }
 
 
@@ -119,7 +122,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         Client client = clientService.findByEmail(clientEmail);
         if (client == null) throw new ShopException("Client does not exist");
         ShoppingBasket shoppingBasket = shoppingBasketService.findBasketByClient(client);
-        if (shoppingBasket == null || shoppingBasket.isEmpty()) throw new ShopException("Shopping basket is empty");
+        if (shoppingBasket == null || shoppingBasketService.isEmpty(shoppingBasket)) throw new ShopException("Shopping basket is empty");
         List<ShoppingBasketPart> parts = shoppingBasket.getParts();
         List<OrderPart> orderParts = new ArrayList<>();
         parts.forEach(part -> orderParts.add(orderPartService.createOrderPart(part.getThing(), part.getQuantity())));

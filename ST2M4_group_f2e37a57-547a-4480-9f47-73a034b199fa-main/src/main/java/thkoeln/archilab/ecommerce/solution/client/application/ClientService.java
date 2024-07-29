@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ClientService {
 
-    private  final ClientRepository clientRepository;
+    private final ClientRepository clientRepository;
 
 
     public void createClient(String name, EmailType email, HomeAddressType address) {
@@ -52,17 +52,18 @@ public class ClientService {
 
     public void addToOrderHistory(Client client, Orderable order) {
         if (client == null || order == null) throw new ShopException("invalid data");
-        client.addToOrderHistory(order);
+        client.getOrderHistory().add(order);
         clientRepository.save(client);
     }
-    public ClientType findClientByOrder(Orderable order){
+
+    public ClientType findClientByOrder(Orderable order) {
         List<Client> clients = clientRepository.findAll();
-        for(Client client:clients){
+        for (Client client : clients) {
             List<Orderable> orderHistory = client.getOrderHistory();
-            for(Orderable orderOfClient:orderHistory){
-                if (orderOfClient.getOrderId().equals(order.getOrderId())){
+            for (Orderable orderOfClient : orderHistory) {
+                if (orderOfClient.getOrderId().equals(order.getOrderId())) {
                     return new ClientTypeImp(
-                            client.getName(),client.getEmail(),client.getHomeAddress()
+                            client.getName(), client.getEmail(), client.getHomeAddress()
                     );
                 }
             }
@@ -72,7 +73,7 @@ public class ClientService {
 
     public ClientDTO findClientDTOByEmail(Email emailaddress) {
         Client client = findByEmail(emailaddress);
-        if(client==null) return null;
+        if (client == null) return null;
         ClientDTO clientDTO = new ClientDTO();
         clientDTO.setEmailString(client.getEmail().getEmailAddress());
         clientDTO.setId(client.getClientId());
@@ -83,9 +84,9 @@ public class ClientService {
     }
 
     public Client findClientById(UUID clientId) {
-        if(clientId==null ) throw new ShopException("id cannot be null");
+        if (clientId == null) throw new ShopException("id cannot be null");
         Optional<Client> client = clientRepository.findById(clientId);
-        if(client.isEmpty()) return null;
+        if (client.isEmpty()) return null;
         return client.get();
     }
 

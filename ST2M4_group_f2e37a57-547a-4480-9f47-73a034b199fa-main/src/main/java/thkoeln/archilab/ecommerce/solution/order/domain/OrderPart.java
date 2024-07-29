@@ -32,17 +32,7 @@ public class OrderPart {
         this.orderQuantity = quantity;
     }
 
-    public void addQuantity(int quantity) {
-        orderQuantity += quantity;
-    }
 
-    public boolean contains(Thing thing) {
-        return this.thing.equals(thing);
-    }
-
-    public UUID getThingId() {
-        return this.thing.getId();
-    }
 
     @Override
     public boolean equals(Object o) {

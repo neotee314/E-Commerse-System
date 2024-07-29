@@ -10,6 +10,7 @@ import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketP
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketPartRepository;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketRepository;
 import thkoeln.archilab.ecommerce.solution.thing.application.ReservationServiceInterface;
+import thkoeln.archilab.ecommerce.solution.thing.domain.Reservable;
 import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
 
 import java.util.List;
@@ -21,7 +22,6 @@ import java.util.Random;
 public class ReservationService implements ReservationServiceInterface {
     private final ShoppingBasketRepository shoppingBasketRepository;
     private final ShoppingBasketService shoppingBasketService;
-    private final OrderPartRepository orderPartRepository;
     private final ShoppingBasketPartRepository shoppingBasketPartRepository;
 
 
@@ -35,10 +35,6 @@ public class ReservationService implements ReservationServiceInterface {
         return totalReserved;
     }
 
-    @Override
-    public void deleteOrderParts() {
-        orderPartRepository.deleteAll();
-    }
 
     @Override
     public void deleteAllShoppingBasketParts() {
@@ -59,17 +55,29 @@ public class ReservationService implements ReservationServiceInterface {
         int totalReserved = 0;
 
         for (ShoppingBasket basket : basketsContainingThing) {
-            totalReserved += basket.getReservedQuantity(thing);
+            totalReserved += getReservedQuantity(basket, thing);
         }
         if (totalReserved < removedQuantity)
             throw new ShopException("cannot remvoe more than reserved thing in basket");
         while (removedQuantity > 0) {
             int randomIndex = random.nextInt(basketsContainingThing.size());
             ShoppingBasket basket = basketsContainingThing.get(randomIndex);
-            boolean isRemoved = basket.removeThingFromBasket(thing, 1);
+            boolean isRemoved = shoppingBasketService.removeThingFromBasket(basket, thing, 1);
             shoppingBasketRepository.save(basket);
             if (isRemoved) removedQuantity -= 1;
         }
+    }
+
+    @Override
+    public int getReservedQuantity(Reservable shoppingBasket, Thing thing) {
+        int totalReserved = 0;
+
+        for (ShoppingBasketPart part : ((ShoppingBasket) shoppingBasket).getParts()) {
+            if (part.contains(thing)) {
+                totalReserved += part.getQuantity();
+            }
+        }
+        return totalReserved;
     }
 
 

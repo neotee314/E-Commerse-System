@@ -42,11 +42,11 @@ public class StockLevelService implements InventoryServiceInterface {
             int availableQuantity = stockLevelList.get(i).getQuantity();
 
             if (removedQuantity > availableQuantity && availableQuantity > 1) {
-                stockLevelList.get(i).removeFromQuantity(1);
+                removeFromQuantity(stockLevelList.get(i), 1);
                 stockLevelRepository.save(stockLevelList.get(i));
                 removedQuantity -= 1;
             } else if (availableQuantity >= removedQuantity) {
-                stockLevelList.get(i).removeFromQuantity(removedQuantity);
+                removeFromQuantity(stockLevelList.get(i), removedQuantity);
                 stockLevelRepository.save(stockLevelList.get(i));
                 removedQuantity = 0;
             }
@@ -64,16 +64,33 @@ public class StockLevelService implements InventoryServiceInterface {
     public List<StockLevel> findAllContainingThing(Thing thing) {
         List<StockLevel> stockLevels = new ArrayList<>();
         for (StockLevel stockLevel : stockLevelRepository.findAll()) {
-            if (stockLevel.contain(thing)) stockLevels.add(stockLevel);
+            if (contain(stockLevel, thing)) stockLevels.add(stockLevel);
         }
         return stockLevels;
     }
 
     public boolean isInInventory(Thing thing) {
         for (StockLevel stockLevel : stockLevelRepository.findAll()) {
-            if (stockLevel.contain(thing)) return true;
+            if (contain(stockLevel, thing)) return true;
         }
         return false;
+    }
+
+    public void removeFromQuantity(StockLevel stockLevel, int removedQuantity) {
+        int current = stockLevel.getQuantity();
+        stockLevel.setQuantity(current - removedQuantity);
+        stockLevelRepository.save(stockLevel);
+    }
+
+    public void addToQuantity(StockLevel stockLevel, int addedQuantity) {
+        int current = stockLevel.getQuantity();
+        stockLevel.setQuantity(current + addedQuantity);
+        stockLevelRepository.save(stockLevel);
+    }
+
+
+    public boolean contain(StockLevel stockLevel, Thing thing) {
+        return stockLevel.getThing().getId().equals(thing.getId());
     }
 
     public void deleteAll() {

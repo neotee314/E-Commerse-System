@@ -23,15 +23,26 @@ public class OrderService implements OrderHistoryServiceInterface, OrderedThingS
 
     private final OrderRepository orderRepository;
     private final ClientService clientService;
+    private final OrderPartService orderPartService;
 
 
     public Order create(List<OrderPart> orderParts) {
         Order order = new Order();
         for (OrderPart part : orderParts) {
-            order.addOrderPart(part);
+            addOrderPart(order, part);
         }
         orderRepository.save(order);
         return order;
+    }
+
+    public void addOrderPart(Order order, OrderPart orderPart) {
+        for (OrderPart o : order.getOrderParts()) {
+            if (o == orderPart) {
+                orderPartService.addQuantity(orderPart,orderPart.getOrderQuantity());
+                return;
+            }
+        }
+        order.getOrderParts().add(orderPart);
     }
 
 
@@ -53,7 +64,7 @@ public class OrderService implements OrderHistoryServiceInterface, OrderedThingS
             List<OrderPart> orderParts = order.getOrderParts();
 
             for (OrderPart orderPart : orderParts) {
-                UUID thingId = orderPart.getThingId();
+                UUID thingId =  orderPartService.getThingId(orderPart);
                 int quantity = orderPart.getOrderQuantity();
                 if (orderHistoryMap.containsKey(thingId)) {
                     orderHistoryMap.put(thingId, orderHistoryMap.get(thingId) + quantity);
@@ -82,10 +93,30 @@ public class OrderService implements OrderHistoryServiceInterface, OrderedThingS
         return orderRepository.findById(orderId).orElse(null);
     }
 
+    public boolean contains(Order order, Thing thing) {
+        for (OrderPart item : order.getOrderParts()) {
+            if (orderPartService.getThingId(item).equals(thing.getId())) return true;
+        }
+        return false;
+    }
+
+    public OrderPart getOrderPartContain(Order order, Thing thing) {
+        for (OrderPart orderPart : order.getOrderParts()) {
+            if (orderPart.getThing().equals(thing)) return orderPart;
+        }
+        return null;
+
+    }
+
     @Override
     public boolean isPartOfCompletedOrder(Thing thing) {
         if (thing == null) throw new ShopException("thing cannot be null");
         List<Order> orders = orderRepository.findAll();
-        return orders.stream().anyMatch(order -> order.contains(thing));
+        return orders.stream().anyMatch(order -> contains(order, thing));
+    }
+
+    @Override
+    public void deleteOrderParts() {
+        orderRepository.deleteAll();
     }
 }

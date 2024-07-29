@@ -30,19 +30,4 @@ public class StockLevel {
         this.thing = thing;
         this.quantity = quantity;
     }
-
-    public void removeFromQuantity(int removedQuantity)
-    {
-        this.quantity -= removedQuantity;
-    }
-
-    public void addToQuantity(int addedQuantity)
-    {
-        this.quantity += addedQuantity;
-    }
-
-    public boolean contain(Thing thing)
-    {
-        return this.thing.getId() .equals(thing.getId());
-    }
 }

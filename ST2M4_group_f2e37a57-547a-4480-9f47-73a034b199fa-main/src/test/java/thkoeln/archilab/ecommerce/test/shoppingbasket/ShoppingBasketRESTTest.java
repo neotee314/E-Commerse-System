@@ -194,7 +194,6 @@ public class ShoppingBasketRESTTest {
         shoppingBasketRESTHelper.addThingToShoppingBasket(shoppingBasketId6, thingId2, 2);
         shoppingBasketRESTHelper.addThingToShoppingBasket(shoppingBasketId6, thingId3, 3);
         ShoppingBasket shoppingBasket1 = shoppingBasketService.findById(shoppingBasketId6);
-        Money money = (Money) shoppingBasket1.getCartValue();
         shoppingBasketRESTHelper.getQueryShoppingBasket(clientEmail6, quantityMap1);
 
         shoppingBasketRESTHelper.deleteThingFromShoppingBasket(shoppingBasketId6, thingId2);
