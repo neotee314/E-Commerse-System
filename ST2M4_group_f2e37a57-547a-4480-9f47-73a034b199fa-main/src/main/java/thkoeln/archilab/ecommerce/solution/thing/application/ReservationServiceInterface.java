@@ -1,7 +1,8 @@
 package thkoeln.archilab.ecommerce.solution.thing.application;
 
-import thkoeln.archilab.ecommerce.solution.thing.domain.Reservable;
 import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
+
+import java.util.UUID;
 
 
 public interface ReservationServiceInterface {
@@ -9,5 +10,5 @@ public interface ReservationServiceInterface {
     boolean isReserved(Thing thing);
     int getTotalReservedInAllBaskets(Thing thing);
     void deleteAllShoppingBasketParts();
-    int getReservedQuantity(Reservable shoppingBasket, Thing thing);
+    int getReservedQuantity(UUID shoppingBasketId, Thing thing);
 }

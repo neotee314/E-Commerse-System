@@ -1,18 +1,13 @@
 package thkoeln.archilab.ecommerce.solution.deliverypackage.application;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import thkoeln.archilab.ecommerce.solution.deliverypackage.domain.DeliveryPackage;
-import thkoeln.archilab.ecommerce.solution.deliverypackage.domain.DeliveryPackagePart;
 import thkoeln.archilab.ecommerce.solution.order.application.OrderService;
 import thkoeln.archilab.ecommerce.solution.order.domain.Order;
-import thkoeln.archilab.ecommerce.solution.shoppingbasket.application.ShoppingBasketDTO;
-import thkoeln.archilab.ecommerce.solution.thing.application.ThingService;
 
 import java.util.List;
 import java.util.Map;

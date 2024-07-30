@@ -1,21 +1,18 @@
 package thkoeln.archilab.ecommerce.solution.shoppingbasket.application;
 
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import thkoeln.archilab.ecommerce.ShopException;
 import thkoeln.archilab.ecommerce.domainprimitives.Email;
-import thkoeln.archilab.ecommerce.solution.order.application.OrderPartDTO;
+import thkoeln.archilab.ecommerce.solution.order.application.OrderPartDto;
 import thkoeln.archilab.ecommerce.solution.order.application.OrderService;
 import thkoeln.archilab.ecommerce.solution.order.domain.Order;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
 import thkoeln.archilab.ecommerce.solution.thing.application.ReservationServiceInterface;
 import thkoeln.archilab.ecommerce.solution.thing.application.ThingService;
 import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
-import thkoeln.archilab.ecommerce.usecases.ThingCatalogUseCases;
 
 import java.util.UUID;
 
@@ -30,11 +27,11 @@ public class ShoppingBasketController {
     private final ReservationServiceInterface reservationServiceInterface;
 
     @GetMapping("/shoppingBaskets")
-    public ResponseEntity<ShoppingBasketDTO> getShoppingBasketForClient(@RequestParam(value = "clientId", required = false) UUID clientId) {
+    public ResponseEntity<ShoppingBasketDto> getShoppingBasketForClient(@RequestParam(value = "clientId", required = false) UUID clientId) {
         if (clientId == null) {
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
         }
-        ShoppingBasketDTO shoppingBasketDTO = shoppingBasketService.findBasketByClientId(clientId);
+        ShoppingBasketDto shoppingBasketDTO = shoppingBasketService.findBasketByClientId(clientId);
         if (shoppingBasketDTO == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
@@ -44,7 +41,7 @@ public class ShoppingBasketController {
 
     @PostMapping("/shoppingBaskets/{shoppingBasket-id}/parts")
     public ResponseEntity<?> addThingToShoppingBasket(@PathVariable("shoppingBasket-id") UUID shoppingBasketId,
-                                                      @RequestBody OrderPartDTO partDTO) {
+                                                      @RequestBody OrderPartDto partDTO) {
 
         try {
             if (shoppingBasketId == null || partDTO.getThingId() == null)
@@ -74,7 +71,7 @@ public class ShoppingBasketController {
             Email clientEmail = shoppingBasket.getClient().getEmail();
 
             Thing thing = thingService.findById(thingId);
-            int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(shoppingBasket, thing);
+            int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(shoppingBasket.getId(), thing);
             shoppingBasketUseCaseService.removeThingFromShoppingBasket(clientEmail, thingId, currentlyReservedGood);
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (ShopException e) {

@@ -98,18 +98,18 @@ public class ShoppingBasketService {
     }
 
 
-    public ShoppingBasketDTO findBasketByClientId(UUID clientId) {
+    public ShoppingBasketDto findBasketByClientId(UUID clientId) {
         Client client = clientService.findClientById(clientId);
         if (client == null) return null;
 
         ShoppingBasket shoppingBasket = findOrCreateBasketByClient(client);
 
-        ShoppingBasketDTO shoppingBasketDTO = new ShoppingBasketDTO();
+        ShoppingBasketDto shoppingBasketDTO = new ShoppingBasketDto();
         shoppingBasketDTO.setId(shoppingBasket.getId());
 
-        List<ShoppingBasketPartDTO> partDTOS = new ArrayList<>();
+        List<ShoppingBasketPartDto> partDTOS = new ArrayList<>();
         for (ShoppingBasketPart part : shoppingBasket.getParts()) {
-            ShoppingBasketPartDTO partDto = new ShoppingBasketPartDTO();
+            ShoppingBasketPartDto partDto = new ShoppingBasketPartDto();
             partDto.setQuantity(part.getQuantity());
             partDto.setThingId(part.getThing().getId());
             partDTOS.add(partDto);

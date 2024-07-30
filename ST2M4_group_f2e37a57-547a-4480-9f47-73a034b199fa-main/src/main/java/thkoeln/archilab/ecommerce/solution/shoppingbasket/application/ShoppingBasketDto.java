@@ -10,10 +10,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ShoppingBasketDTO {
+public class ShoppingBasketDto {
 
     private UUID id ;
     private String totalSalesPrice ;
-    private List<ShoppingBasketPartDTO> shoppingBasketParts ;
+    private List<ShoppingBasketPartDto> shoppingBasketParts ;
 
 }

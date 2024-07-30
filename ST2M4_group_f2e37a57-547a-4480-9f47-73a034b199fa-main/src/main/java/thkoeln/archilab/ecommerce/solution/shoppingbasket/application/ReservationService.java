@@ -1,20 +1,18 @@
 package thkoeln.archilab.ecommerce.solution.shoppingbasket.application;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import thkoeln.archilab.ecommerce.ShopException;
-import thkoeln.archilab.ecommerce.solution.order.domain.OrderPartRepository;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketPart;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketPartRepository;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketRepository;
 import thkoeln.archilab.ecommerce.solution.thing.application.ReservationServiceInterface;
-import thkoeln.archilab.ecommerce.solution.thing.domain.Reservable;
 import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 
 @Service
@@ -55,7 +53,7 @@ public class ReservationService implements ReservationServiceInterface {
         int totalReserved = 0;
 
         for (ShoppingBasket basket : basketsContainingThing) {
-            totalReserved += getReservedQuantity(basket, thing);
+            totalReserved += getReservedQuantity(basket.getId(), thing);
         }
         if (totalReserved < removedQuantity)
             throw new ShopException("cannot remvoe more than reserved thing in basket");
@@ -69,10 +67,12 @@ public class ReservationService implements ReservationServiceInterface {
     }
 
     @Override
-    public int getReservedQuantity(Reservable shoppingBasket, Thing thing) {
+    public int getReservedQuantity(UUID shoppingBasketId, Thing thing) {
         int totalReserved = 0;
-
-        for (ShoppingBasketPart part : ((ShoppingBasket) shoppingBasket).getParts()) {
+        if (shoppingBasketId == null) throw new ShopException("shoppingBasketId cannot be null");
+        ShoppingBasket shoppingBasket = shoppingBasketService.findById(shoppingBasketId);
+        if (shoppingBasket == null) throw new ShopException("shoppingbasket not found");
+        for (ShoppingBasketPart part : (shoppingBasket).getParts()) {
             if (part.contains(thing)) {
                 totalReserved += part.getQuantity();
             }

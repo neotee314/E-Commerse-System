@@ -70,7 +70,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         ShoppingBasket basket = shoppingBasketService.findBasketByClient(client);
         if (!shoppingBasketService.contains(basket, thing))
             throw new ShopException("Thing is not in the cart of client");
-        int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(basket,thing);
+        int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(basket.getId(),thing);
         if (quantity > currentlyReservedGood)
             throw new ShopException("Thing is not in the cart in the requested quantity");
         shoppingBasketService.removeThingFromBasket(basket, thing, quantity);
@@ -101,7 +101,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (thing == null) throw new ShopException("Thing does not exist");
         List<ShoppingBasket> shoppingBasketList = shoppingBasketService.findAll();
         return shoppingBasketList.stream().mapToInt(basket ->
-                reservationServiceInterface.getReservedQuantity(basket,thing)).sum();
+                reservationServiceInterface.getReservedQuantity(basket.getId(),thing)).sum();
     }
 
 

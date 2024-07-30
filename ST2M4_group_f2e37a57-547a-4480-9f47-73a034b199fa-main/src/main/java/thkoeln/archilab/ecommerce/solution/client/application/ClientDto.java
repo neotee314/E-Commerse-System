@@ -10,11 +10,10 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientDTO {
+public class ClientDto {
     private UUID id;
     private String name;
     private String emailString;
     private String city;
     private String zipCodeString;
-
 }

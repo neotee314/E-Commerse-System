@@ -1,7 +1,6 @@
 package thkoeln.archilab.ecommerce.solution.client.application;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import thkoeln.archilab.ecommerce.ShopException;
 import thkoeln.archilab.ecommerce.domainprimitives.Email;
@@ -71,10 +70,10 @@ public class ClientService {
         return null;
     }
 
-    public ClientDTO findClientDTOByEmail(Email emailaddress) {
+    public ClientDto findClientDTOByEmail(Email emailaddress) {
         Client client = findByEmail(emailaddress);
         if (client == null) return null;
-        ClientDTO clientDTO = new ClientDTO();
+        ClientDto clientDTO = new ClientDto();
         clientDTO.setEmailString(client.getEmail().getEmailAddress());
         clientDTO.setId(client.getClientId());
         clientDTO.setName(client.getName());

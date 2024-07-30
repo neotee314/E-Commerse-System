@@ -1,14 +1,7 @@
 package thkoeln.archilab.ecommerce.solution.shoppingbasket.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import thkoeln.archilab.ecommerce.domainprimitives.Money;
+import lombok.*;
 import thkoeln.archilab.ecommerce.solution.client.domain.Client;
-import thkoeln.archilab.ecommerce.solution.thing.domain.Reservable;
-import thkoeln.archilab.ecommerce.solution.thing.domain.Thing;
-import thkoeln.archilab.ecommerce.usecases.domainprimitivetypes.MoneyType;
 
 import javax.persistence.*;
 import java.util.*;
@@ -18,8 +11,11 @@ import java.util.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@SecondaryTable(name = "SHOPKEEPING_TABLE")
-public class ShoppingBasket extends Reservable {
+@Table(name = "SHOPKEEPING_TABLE")
+public class ShoppingBasket {
+
+    @Id
+    private UUID id = UUID.randomUUID();
 
     @ManyToOne(cascade = CascadeType.ALL)
     private Client client;
@@ -30,9 +26,4 @@ public class ShoppingBasket extends Reservable {
     public ShoppingBasket(Client client) {
         this.client = client;
     }
-
-    public UUID getId(){
-        return super.id;
-    }
-
 }
