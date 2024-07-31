@@ -19,9 +19,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReservationService implements ReservationServiceInterface {
     private final ShoppingBasketRepository shoppingBasketRepository;
-    private final ShoppingBasketService shoppingBasketService;
+    private final ShoppingBasketManagementService shoppingBasketService;
     private final ShoppingBasketPartRepository shoppingBasketPartRepository;
-
+    private final BasketPartsManagementService basketPartsManagementService;
 
     @Override
     public int getTotalReservedInAllBaskets(Thing thing) {
@@ -60,7 +60,7 @@ public class ReservationService implements ReservationServiceInterface {
         while (removedQuantity > 0) {
             int randomIndex = random.nextInt(basketsContainingThing.size());
             ShoppingBasket basket = basketsContainingThing.get(randomIndex);
-            boolean isRemoved = shoppingBasketService.removeThingFromBasket(basket, thing, 1);
+            boolean isRemoved = basketPartsManagementService.removeThingFromBasket(basket, thing, 1);
             shoppingBasketRepository.save(basket);
             if (isRemoved) removedQuantity -= 1;
         }
@@ -73,13 +73,12 @@ public class ReservationService implements ReservationServiceInterface {
         ShoppingBasket shoppingBasket = shoppingBasketService.findById(shoppingBasketId);
         if (shoppingBasket == null) throw new ShopException("shoppingbasket not found");
         for (ShoppingBasketPart part : (shoppingBasket).getParts()) {
-            if (part.contains(thing)) {
+            if (basketPartsManagementService.contains(part,thing)) {
                 totalReserved += part.getQuantity();
             }
         }
         return totalReserved;
     }
-
 
     @Override
     public boolean isReserved(Thing thing) {

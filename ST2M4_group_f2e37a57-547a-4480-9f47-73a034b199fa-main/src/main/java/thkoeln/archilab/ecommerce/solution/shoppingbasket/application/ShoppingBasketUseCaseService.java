@@ -11,6 +11,7 @@ import thkoeln.archilab.ecommerce.solution.order.domain.Order;
 import thkoeln.archilab.ecommerce.solution.order.domain.OrderPart;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketPart;
+import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasketRepository;
 import thkoeln.archilab.ecommerce.solution.stocklevel.application.StockLevelService;
 import thkoeln.archilab.ecommerce.solution.storageunit.application.StorageUnitUseCaseService;
 import thkoeln.archilab.ecommerce.solution.thing.application.ReservationServiceInterface;
@@ -32,12 +33,15 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
 
     private final ClientService clientService;
     private final ThingService thingService;
-    private final ShoppingBasketService shoppingBasketService;
+    private final ShoppingBasketManagementService shoppingBasketManagementService;
+    private final BasketPartsManagementService partsManagementService;
     private final OrderService orderService;
     private final StorageUnitUseCaseService storageUnitUseCaseService;
     private final StockLevelService stockLevelService;
     private final OrderPartService orderPartService;
     private final ReservationServiceInterface reservationServiceInterface;
+    private final ShoppingBasketRepository shoppingBasketRepository;
+    private final BasketPricingService basketPricingService;
 
     @Override
     public void addThingToShoppingBasket(EmailType clientEmail, UUID thingId, int quantity) {
@@ -53,7 +57,7 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
             throw new ShopException("Thing is not available in the requested quantity");
         stockLevelService.removeFromStock(thing, quantity);
         ShoppingBasketPart part = new ShoppingBasketPart(thing, quantity);
-        shoppingBasketService.addPart(client, part);
+        partsManagementService.addPart(client, part);
 
     }
 
@@ -67,13 +71,14 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (thing == null) throw new ShopException("Thing does not exist");
         if (quantity < 0) throw new ShopException("quantity can not be negative");
 
-        ShoppingBasket basket = shoppingBasketService.findBasketByClient(client);
-        if (!shoppingBasketService.contains(basket, thing))
+        ShoppingBasket basket = shoppingBasketRepository.findByClient(client);
+        if (basket == null) throw new ShopException("Basket doese not exist");
+        if (!shoppingBasketManagementService.contains(basket, thing))
             throw new ShopException("Thing is not in the cart of client");
-        int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(basket.getId(),thing);
+        int currentlyReservedGood = reservationServiceInterface.getReservedQuantity(basket.getId(), thing);
         if (quantity > currentlyReservedGood)
             throw new ShopException("Thing is not in the cart in the requested quantity");
-        shoppingBasketService.removeThingFromBasket(basket, thing, quantity);
+        partsManagementService.removeThingFromBasket(basket, thing, quantity);
     }
 
     @Override
@@ -81,8 +86,9 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (clientEmail == null) throw new ShopException("email cannot be null");
         Client client = clientService.findByEmail(clientEmail);
         if (client == null) throw new ShopException("client does not exist");
-        ShoppingBasket basket = shoppingBasketService.findBasketByClient(client);
-        return shoppingBasketService.getAsMap(basket);
+        ShoppingBasket basket = shoppingBasketRepository.findByClient(client);
+
+        return shoppingBasketManagementService.getAsMap(basket);
     }
 
     @Override
@@ -90,8 +96,8 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (clientEmail == null) throw new ShopException("email cannot be null");
         Client client = clientService.findByEmail(clientEmail);
         if (client == null) throw new ShopException("client does not exist");
-        ShoppingBasket basket = shoppingBasketService.findBasketByClient(client);
-        return shoppingBasketService.getCartValue(basket);
+        ShoppingBasket basket = shoppingBasketRepository.findByClient(client);
+        return basketPricingService.getCartValue(basket);
     }
 
     @Override
@@ -99,9 +105,9 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (thingId == null) throw new ShopException("Thing id cannot be null");
         Thing thing = thingService.findById(thingId);
         if (thing == null) throw new ShopException("Thing does not exist");
-        List<ShoppingBasket> shoppingBasketList = shoppingBasketService.findAll();
+        List<ShoppingBasket> shoppingBasketList = shoppingBasketManagementService.findAll();
         return shoppingBasketList.stream().mapToInt(basket ->
-                reservationServiceInterface.getReservedQuantity(basket.getId(),thing)).sum();
+                reservationServiceInterface.getReservedQuantity(basket.getId(), thing)).sum();
     }
 
 
@@ -110,9 +116,9 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (clientEmail == null) throw new ShopException("email cannot be null");
         Client client = clientService.findByEmail(clientEmail);
         if (client == null) throw new ShopException("client does not exist");
-        ShoppingBasket shoppingBasket = shoppingBasketService.findBasketByClient(client);
+        ShoppingBasket shoppingBasket = shoppingBasketRepository.findByClient(client);
         if (shoppingBasket == null) return true;
-        return shoppingBasketService.isEmpty(shoppingBasket);
+        return shoppingBasketManagementService.isEmpty(shoppingBasket);
     }
 
 
@@ -121,20 +127,21 @@ public class ShoppingBasketUseCaseService implements ShoppingBasketUseCases {
         if (clientEmail == null) throw new ShopException("client email cannot be null");
         Client client = clientService.findByEmail(clientEmail);
         if (client == null) throw new ShopException("Client does not exist");
-        ShoppingBasket shoppingBasket = shoppingBasketService.findBasketByClient(client);
-        if (shoppingBasket == null || shoppingBasketService.isEmpty(shoppingBasket)) throw new ShopException("Shopping basket is empty");
+        ShoppingBasket shoppingBasket = shoppingBasketRepository.findByClient(client);
+        if (shoppingBasket == null || shoppingBasketManagementService.isEmpty(shoppingBasket))
+            throw new ShopException("Shopping basket is empty");
         List<ShoppingBasketPart> parts = shoppingBasket.getParts();
         List<OrderPart> orderParts = new ArrayList<>();
         parts.forEach(part -> orderParts.add(orderPartService.createOrderPart(part.getThing(), part.getQuantity())));
         Order order = orderService.create(orderParts);
         clientService.addToOrderHistory(client, order);
-        shoppingBasketService.emptyBasket(shoppingBasket);
+        shoppingBasketManagementService.emptyBasket(shoppingBasket);
         return order.getOrderId();
     }
 
     @Override
     public void emptyAllShoppingBaskets() {
-        shoppingBasketService.emptyAllBaskets();
+        shoppingBasketManagementService.emptyAllBaskets();
     }
 
 }

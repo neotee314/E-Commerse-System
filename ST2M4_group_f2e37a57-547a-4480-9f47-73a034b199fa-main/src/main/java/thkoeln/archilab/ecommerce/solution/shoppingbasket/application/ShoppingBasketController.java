@@ -8,7 +8,6 @@ import thkoeln.archilab.ecommerce.ShopException;
 import thkoeln.archilab.ecommerce.domainprimitives.Email;
 import thkoeln.archilab.ecommerce.solution.order.application.OrderPartDto;
 import thkoeln.archilab.ecommerce.solution.order.application.OrderService;
-import thkoeln.archilab.ecommerce.solution.order.domain.Order;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
 import thkoeln.archilab.ecommerce.solution.thing.application.ReservationServiceInterface;
 import thkoeln.archilab.ecommerce.solution.thing.application.ThingService;
@@ -21,9 +20,8 @@ import java.util.UUID;
 public class ShoppingBasketController {
 
     private final ShoppingBasketUseCaseService shoppingBasketUseCaseService;
-    private final ShoppingBasketService shoppingBasketService;
+    private final ShoppingBasketManagementService shoppingBasketService;
     private final ThingService thingService;
-    private final OrderService orderService;
     private final ReservationServiceInterface reservationServiceInterface;
 
     @GetMapping("/shoppingBaskets")
@@ -31,11 +29,11 @@ public class ShoppingBasketController {
         if (clientId == null) {
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
         }
-        ShoppingBasketDto shoppingBasketDTO = shoppingBasketService.findBasketByClientId(clientId);
-        if (shoppingBasketDTO == null) {
+        ShoppingBasketDto shoppingBasketDto = shoppingBasketService.findBasketByClientId(clientId);
+        if (shoppingBasketDto == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return new ResponseEntity<>(shoppingBasketDTO, HttpStatus.OK);
+        return new ResponseEntity<>(shoppingBasketDto, HttpStatus.OK);
     }
 
 
@@ -89,7 +87,6 @@ public class ShoppingBasketController {
         try {
             ShoppingBasket shoppingBasket = shoppingBasketService.findById(shoppingBasketId);
             UUID orderId = shoppingBasketUseCaseService.checkout(shoppingBasket.getClient().getEmail());
-            Order order = orderService.findById(orderId);
             IdDto idDto = new IdDto();
             idDto.setId(orderId);
 

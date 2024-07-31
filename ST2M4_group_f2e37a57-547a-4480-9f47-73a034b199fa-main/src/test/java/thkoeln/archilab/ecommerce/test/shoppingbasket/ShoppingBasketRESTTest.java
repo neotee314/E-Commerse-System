@@ -8,10 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
-import thkoeln.archilab.ecommerce.domainprimitives.Money;
 import thkoeln.archilab.ecommerce.solution.client.application.ClientService;
-import thkoeln.archilab.ecommerce.solution.client.domain.Client;
-import thkoeln.archilab.ecommerce.solution.shoppingbasket.application.ShoppingBasketService;
+import thkoeln.archilab.ecommerce.solution.shoppingbasket.application.ShoppingBasketManagementService;
 import thkoeln.archilab.ecommerce.solution.shoppingbasket.domain.ShoppingBasket;
 import thkoeln.archilab.ecommerce.test.ShoppingBasketRESTHelper;
 import thkoeln.archilab.ecommerce.usecases.ShoppingBasketUseCases;
@@ -25,13 +23,11 @@ import thkoeln.archilab.ecommerce.usecases.masterdata.Purgatory;
 
 import javax.transaction.Transactional;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static thkoeln.archilab.ecommerce.usecases.masterdata.ThingAndStockMasterDataInitializer.*;
 import static thkoeln.archilab.ecommerce.usecases.masterdata.ClientMasterDataInitializer.CLIENT_EMAIL;
@@ -167,7 +163,7 @@ public class ShoppingBasketRESTTest {
     }
 
     @Autowired
-    private ShoppingBasketService shoppingBasketService;
+    private ShoppingBasketManagementService shoppingBasketService;
     @Autowired
     private ClientService clientService;
 

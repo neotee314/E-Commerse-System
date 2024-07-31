@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ShoppingBasketPart {
     @Id
-    private UUID shoppingBasketPartId = UUID.randomUUID();
+    private UUID id = UUID.randomUUID();
 
     private int quantity;
 
@@ -28,24 +28,6 @@ public class ShoppingBasketPart {
         this.quantity = reservedQuantity;
     }
 
-    public boolean contains(Thing thing) {
-        return this.thing.getId().equals(thing.getId());
-    }
 
-    public UUID getThingId() {
-        return thing.getId();
-    }
-
-    public void addQuantity(int quantity) {
-        this.quantity += quantity;
-    }
-
-    public void removeQuantity(int quantity) {
-        this.quantity -= quantity;
-    }
-
-    public Money getSellingPrice() {
-        return this.thing.getSellingPrice();
-    }
 
 }
